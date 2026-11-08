@@ -57,6 +57,7 @@ class FLauncherApp extends StatelessWidget
     launcherState.refresh(appsService);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.escape): _backIntents,

@@ -260,6 +260,8 @@ class AppsService extends ChangeNotifier
 
   Future<void> uninstallApp(App app) => _fLauncherChannel.uninstallApp(app.packageName);
 
+  Future<bool> openStockLauncher() => _fLauncherChannel.openStockLauncher();
+
   Future<void> openSettings() => _fLauncherChannel.openSettings();
 
   Future<bool> isDefaultLauncher() => _fLauncherChannel.isDefaultLauncher();

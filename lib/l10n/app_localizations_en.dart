@@ -187,6 +187,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sort => 'Sort';
 
   @override
+  String get stockLauncher => 'Stock Launcher';
+
+  @override
+  String get stockLauncherUnavailable =>
+      'Stock launcher is not available on this device';
+
+  @override
   String get systemSettings => 'System settings';
 
   @override

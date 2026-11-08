@@ -105,6 +105,22 @@ class SettingsPanelPage extends StatelessWidget {
                     ),
                     onPressed: () => context.read<AppsService>().openSettings(),
                   ),
+                  TextButton(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.tv),
+                        Container(width: 8),
+                        Text(localizations.stockLauncher, style: Theme.of(context).textTheme.bodyMedium),
+                      ],
+                    ),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final started = await context.read<AppsService>().openStockLauncher();
+                      if (!started) {
+                        messenger.showSnackBar(SnackBar(content: Text(localizations.stockLauncherUnavailable)));
+                      }
+                    },
+                  ),
                   const Divider(),
                   TextButton(
                     child: Row(

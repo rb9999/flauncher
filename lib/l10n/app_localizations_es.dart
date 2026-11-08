@@ -190,6 +190,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sort => 'Orden';
 
   @override
+  String get stockLauncher => 'Launcher original';
+
+  @override
+  String get stockLauncherUnavailable =>
+      'El launcher original no está disponible en este dispositivo';
+
+  @override
   String get systemSettings => 'Ajustes del sistema';
 
   @override

@@ -434,6 +434,18 @@ abstract class AppLocalizations {
   /// **'Sort'**
   String get sort;
 
+  /// No description provided for @stockLauncher.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Launcher'**
+  String get stockLauncher;
+
+  /// No description provided for @stockLauncherUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock launcher is not available on this device'**
+  String get stockLauncherUnavailable;
+
   /// No description provided for @systemSettings.
   ///
   /// In en, this message translates to:

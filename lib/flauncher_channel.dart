@@ -49,6 +49,8 @@ class FLauncherChannel {
 
   Future<void> openSettings() async => await _methodChannel.invokeMethod('openSettings');
 
+  Future<bool> openStockLauncher() async => await _methodChannel.invokeMethod<bool>('openStockLauncher') ?? false;
+
   Future<void> openAppInfo(String packageName) async => await _methodChannel.invokeMethod('openAppInfo', packageName);
 
   Future<void> uninstallApp(String packageName) async => await _methodChannel.invokeMethod('uninstallApp', packageName);

@@ -75,6 +75,7 @@ public class MainActivity extends FlutterActivity
                 case "launchActivityFromAction" -> result.success(launchActivityFromAction(call.arguments()));
                 case "launchApp" -> result.success(launchApp(call.arguments()));
                 case "openSettings" -> result.success(openSettings());
+                case "openStockLauncher" -> result.success(openStockLauncher());
                 case "openAppInfo" -> result.success(openAppInfo(call.arguments()));
                 case "uninstallApp" -> result.success(uninstallApp(call.arguments()));
                 case "isDefaultLauncher" -> result.success(isDefaultLauncher());
@@ -308,6 +309,15 @@ public class MainActivity extends FlutterActivity
 
     private boolean openSettings() {
         return launchActivityFromAction(Settings.ACTION_SETTINGS);
+    }
+
+    private boolean openStockLauncher() {
+        Intent intent = new Intent()
+                .setComponent(new android.content.ComponentName(
+                        "com.google.android.tvlauncher", "com.google.android.tvlauncher.MainActivity"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        return tryStartActivity(intent);
     }
 
     private boolean openAppInfo(String packageName) {

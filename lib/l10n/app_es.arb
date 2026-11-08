@@ -81,6 +81,8 @@
     "show": "Mostrar",
     "showCategoryTitles": "Mostrar títulos de categorías",
     "sort": "Orden",
+    "stockLauncher": "Launcher original",
+    "stockLauncherUnavailable": "El launcher original no está disponible en este dispositivo",
     "systemSettings": "Ajustes del sistema",
     "textAboutDialog": "FLauncher es un lanzador de aplicaciones alternativo de código abierto para Android TV.\nCódigo fuente disponible en {repoUrl}.\n\nLogo creado por Katie (@fureturoe) y diseño por @FXCostanzo.",
     "@textAboutDialog": {
