@@ -18,9 +18,9 @@
 
 import 'dart:async';
 
+import 'package:flauncher/app_focus_style.dart';
 import 'package:flauncher/app_image_type.dart';
 import 'package:flauncher/providers/apps_service.dart';
-import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/widgets/application_info_panel.dart';
 import 'package:flauncher/widgets/focus_keyboard_listener.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +38,7 @@ class AppCard extends StatefulWidget
   final App application;
   final Category category;
   final bool autofocus;
+  final bool pillInside;
   final void Function(AxisDirection) onMove;
   final VoidCallback onMoveEnd;
 
@@ -46,6 +47,7 @@ class AppCard extends StatefulWidget
     required this.application,
     required this.category,
     required this.autofocus,
+    this.pillInside = false,
     required this.onMove,
     required this.onMoveEnd,
   });
@@ -54,18 +56,14 @@ class AppCard extends StatefulWidget
   State<AppCard> createState() => _AppCardState();
 }
 
-class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
+class _AppCardState extends State<AppCard> {
+  // Set once per app launch so only the very first card (top of the home screen) takes initial focus.
+  static bool _initialFocusDone = false;
+
+  final FocusNode _focusNode = FocusNode(debugLabel: 'AppCard');
   bool _moving = false;
 
   late Future<Tuple2<AppImageType, ImageProvider>> _appImageLoadFuture;
-  late final AnimationController _animation = AnimationController(
-    vsync: this,
-    lowerBound: 0,
-    upperBound: 255,
-    duration: const Duration(
-      milliseconds: 800,
-    ),
-  );
 
   @override
   void initState() {
@@ -73,12 +71,23 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
 
     FocusManager.instance.addHighlightModeListener(_focusHighlightModeChanged);
     _appImageLoadFuture = _loadAppBannerOrIcon(Provider.of<AppsService>(context, listen: false));
+
+    // The settings cog exists before the apps finish loading and can end up with focus,
+    // which autofocus does not override. Explicitly focus the first card instead.
+    if (widget.autofocus && !_initialFocusDone) {
+      _initialFocusDone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     FocusManager.instance.removeHighlightModeListener(_focusHighlightModeChanged);
-    _animation.dispose();
+    _focusNode.dispose();
 
     super.dispose();
   }
@@ -92,82 +101,99 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
 
         return AspectRatio(
           aspectRatio: 16 / 9,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            transformAlignment: Alignment.center,
-            transform: _scaleTransform(context),
-            child: Material(
-              borderRadius: BorderRadius.circular(8),
-              clipBehavior: Clip.antiAlias,
-              elevation: shouldHighlight ? 16 : 0,
-              shadowColor: Colors.black,
+          child: AnimatedScale(
+              duration: AppFocusStyle.focusDuration,
+              curve: AppFocusStyle.focusCurve,
+              scale: (!_moving && shouldHighlight) ? AppFocusStyle.focusScale : 1.0,
               child: Stack(
                 fit: StackFit.expand,
+                clipBehavior: Clip.none,
                 children: [
-                  InkWell(
-                    autofocus: widget.autofocus,
-                    focusColor: Colors.transparent,
-                    child: _appImage(),
-                    onTap: () => _onPressed(context, LogicalKeyboardKey.enter),
-                    onLongPress: () => _onLongPress(context, LogicalKeyboardKey.enter),
-                    onFocusChange: (focused) {
-                      Scrollable.ensureVisible(
-                        context,
-                        // This specific alignment value is not only
-                        // to center the focused card in the row while
-                        // scrolling, but to prevent the topmost category
-                        // title to be hidden by the content above it when
-                        // scrolling from the app bar. How it relates to this,
-                        // I don't know
-                        alignment: 0.5,
-                        curve: Curves.easeInOut,
-                        duration: Duration(milliseconds: 100)
-                      );
-                    },
-
-                  ),
-                  if (_moving) ..._arrows(),
-                  IgnorePointer(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      opacity: shouldHighlight ? 0 : 0.10,
-                      child: Container(color: Colors.black),
+                  Material(
+                    borderRadius: BorderRadius.circular(AppFocusStyle.cardRadius),
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        InkWell(
+                          autofocus: widget.autofocus,
+                          focusNode: _focusNode,
+                          focusColor: Colors.transparent,
+                          child: _appImage(),
+                          onTap: () => _onPressed(context, LogicalKeyboardKey.enter),
+                          onLongPress: () => _onLongPress(context, LogicalKeyboardKey.enter),
+                          onFocusChange: (focused) {
+                            Scrollable.ensureVisible(
+                              context,
+                              // This specific alignment value is not only
+                              // to center the focused card in the row while
+                              // scrolling, but to prevent the topmost category
+                              // title to be hidden by the content above it when
+                              // scrolling from the app bar. How it relates to this,
+                              // I don't know
+                              alignment: 0.5,
+                              curve: Curves.easeInOut,
+                              duration: Duration(milliseconds: 100)
+                            );
+                          },
+                        ),
+                        if (_moving) ..._arrows(),
+                        if (!shouldHighlight)
+                          IgnorePointer(child: ColoredBox(color: Colors.black.withOpacity(0.10))),
+                      ],
                     ),
                   ),
-                  Selector<SettingsService, bool>(
-                    selector: (_, settingsService) => settingsService.appHighlightAnimationEnabled && shouldHighlight,
-                    builder: (context, highlight, _) {
-                      if (highlight) {
-                        _animation.repeat(reverse: true);
-                        return AnimatedBuilder(
-                          animation: _animation,
-                          builder: (context, child) => IgnorePointer(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.white.withAlpha(_animation.value.round()),
-                                  width: 3
-                                ),
-                              ),
-                            ),
+                  if (shouldHighlight) ...[
+                    // Ring: 3px amber, 3px gap from the card, following its corners.
+                    Positioned(
+                      left: -(AppFocusStyle.ringGap + AppFocusStyle.ringWidth),
+                      top: -(AppFocusStyle.ringGap + AppFocusStyle.ringWidth),
+                      right: -(AppFocusStyle.ringGap + AppFocusStyle.ringWidth),
+                      bottom: -(AppFocusStyle.ringGap + AppFocusStyle.ringWidth),
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                                AppFocusStyle.cardRadius + AppFocusStyle.ringGap + AppFocusStyle.ringWidth),
+                            border: Border.all(color: AppFocusStyle.accent, width: AppFocusStyle.ringWidth),
                           ),
-                        );
-                      }
-
-                      _animation.stop();
-                      return const SizedBox();
-                    },
-                  ),
+                        ),
+                      ),
+                    ),
+                    // Name pill under the card.
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: widget.pillInside
+                          ? AppFocusStyle.pillGap
+                          : -(AppFocusStyle.ringGap + AppFocusStyle.ringWidth + AppFocusStyle.pillGap + 20),
+                      child: IgnorePointer(child: Center(child: _namePill())),
+                    ),
+                  ],
                 ],
               ),
             ),
-          ),
         );
       },
   );
+
+  Widget _namePill() => DecoratedBox(
+        decoration: const BoxDecoration(color: AppFocusStyle.accent, borderRadius: BorderRadius.all(Radius.circular(999))),
+        child: Padding(
+          padding: AppFocusStyle.pillPadding,
+          child: Text(
+            widget.application.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppFocusStyle.pillText,
+              fontSize: AppFocusStyle.pillFontSize,
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+            ),
+          ),
+        ),
+      );
 
   Future<Tuple2<AppImageType, ImageProvider>> _loadAppBannerOrIcon(AppsService service) async {
     Uint8List bytes = Uint8List(0);
@@ -263,14 +289,6 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   bool _shouldHighlight(BuildContext context)
   {
     return FocusManager.instance.highlightMode == FocusHighlightMode.traditional && Focus.of(context).hasFocus;
-  }
-
-  Matrix4 _scaleTransform(BuildContext context) {
-    double scale = 1.0;
-    if (!_moving && _shouldHighlight(context)) {
-      scale = 1.1;
-    }
-    return Matrix4.diagonal3Values(scale, scale, 1.0);
   }
 
   List<Widget> _arrows() => [

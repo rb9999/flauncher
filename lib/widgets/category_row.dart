@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'package:flauncher/app_focus_style.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/widgets/app_card.dart';
 import 'package:flauncher/widgets/category_container_common.dart';
@@ -26,7 +27,7 @@ import '../models/app.dart';
 import '../models/category.dart';
 import '../providers/settings_service.dart';
 
-class CategoryRow extends StatelessWidget
+class CategoryRow extends StatefulWidget
 {
   final Category category;
   final List<App> applications;
@@ -38,6 +39,15 @@ class CategoryRow extends StatelessWidget
   }) : super(key: key);
 
   @override
+  State<CategoryRow> createState() => _CategoryRowState();
+}
+
+class _CategoryRowState extends State<CategoryRow>
+{
+  Category get category => widget.category;
+  List<App> get applications => widget.applications;
+
+  @override
   Widget build(BuildContext context) {
     Widget categoryContent;
     if (applications.isEmpty) {
@@ -45,16 +55,17 @@ class CategoryRow extends StatelessWidget
     }
     else {
       categoryContent = SizedBox(
-        height: category.rowHeight.toDouble(),
+        height: category.rowHeight.toDouble() + AppFocusStyle.rowExtraTop + AppFocusStyle.rowExtraBottom,
         child: ListView.custom(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.fromLTRB(
+            8, 8 + AppFocusStyle.rowExtraTop, 8, 8 + AppFocusStyle.rowExtraBottom),
           scrollDirection: Axis.horizontal,
           childrenDelegate: SliverChildBuilderDelegate(
             childCount: applications.length,
             findChildIndexCallback: _findChildIndex,
             (context, index) => Padding(
                 key: Key(applications[index].packageName),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppFocusStyle.rowHorizontalPadding),
                 child: AppCard(
                   category: category,
                   application: applications[index],

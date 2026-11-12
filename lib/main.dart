@@ -34,6 +34,8 @@ import 'flauncher_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // On a TV there is no touch input: always show focus highlights, not only after the first D-pad press.
+  FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
   initializeDateFormatting();
 
   final sharedPreferences = await SharedPreferences.getInstance();

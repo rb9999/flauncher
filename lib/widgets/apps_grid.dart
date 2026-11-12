@@ -28,7 +28,7 @@ import '../models/category.dart';
 import '../providers/settings_service.dart';
 import 'category_container_common.dart';
 
-class AppsGrid extends StatelessWidget
+class AppsGrid extends StatefulWidget
 {
   final Category category;
   final List<App> applications;
@@ -38,6 +38,15 @@ class AppsGrid extends StatelessWidget
     required this.category,
     required this.applications,
   }) : super(key: key);
+
+  @override
+  State<AppsGrid> createState() => _AppsGridState();
+}
+
+class _AppsGridState extends State<AppsGrid>
+{
+  Category get category => widget.category;
+  List<App> get applications => widget.applications;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +68,7 @@ class AppsGrid extends StatelessWidget
               category: category,
               application: applications[index],
               autofocus: index == 0,
+              pillInside: true,
               onMove: (direction) => _onMove(context, direction, index),
               onMoveEnd: () => _saveOrder(context)
           )

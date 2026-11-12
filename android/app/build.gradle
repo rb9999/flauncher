@@ -73,7 +73,8 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            // Signed with the debug keystore so the APK can update a debug install in place
+            signingConfig signingConfigs.debug
         }
     }
 
